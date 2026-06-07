@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Game Release Tracker{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="{{ url_for('games') }}">Game Release Tracker</a>
+
+    <nav class="nav-links">
+      <a href="{{ url_for('games') }}">Games</a>
+      <a href="#">Login</a>
+    </nav>
+  </header>
+
+  <main class="page-container">
+    {% block content %}
+    <section class="hero">
+      <h1>Game Release Tracker</h1>
+      <p>Browse upcoming games announced during Sony State of Play June 2026.</p>
+      <a class="primary-button" href="{{ url_for('games') }}">View Games</a>
+    </section>
+    {% endblock %}
+  </main>
+</body>
+</html>

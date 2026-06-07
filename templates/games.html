@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Games | Game Release Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Game Showcase Tracker</p>
+  <h1>Upcoming Games Gallery</h1>
+  <p>
+    Browse {{ total_games }} games from recent game showcases. More event filters,
+    watchlists, and comments will be added in future versions.
+  </p>
+</section>
+
+<form class="search-form" method="get" action="{{ url_for('games') }}">
+  <div class="search-row">
+    <input
+      type="text"
+      name="q"
+      placeholder="Search games..."
+      value="{{ query or '' }}"
+    >
+
+    <select name="search_type">
+      <option value="name" {% if search_type == "name" %}selected{% endif %}>
+        Game name
+      </option>
+      <option value="company" {% if search_type == "company" %}selected{% endif %}>
+        Publisher / Developer
+      </option>
+    </select>
+
+    <select name="release_filter">
+      <option value="all" {% if release_filter == "all" %}selected{% endif %}>
+        All releases
+      </option>
+      <option value="no_exact_date" {% if release_filter == "no_exact_date" %}selected{% endif %}>
+        No exact date
+      </option>
+      <option value="exact_date" {% if release_filter == "exact_date" %}selected{% endif %}>
+        Exact date
+      </option>
+      <option value="2026" {% if release_filter == "2026" %}selected{% endif %}>
+        2026
+      </option>
+      <option value="2027" {% if release_filter == "2027" %}selected{% endif %}>
+        2027
+      </option>
+    </select>
+
+    <button type="submit">Search</button>
+
+    {% if query or release_filter != "all" %}
+      <a class="clear-search" href="{{ url_for('games') }}">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+{% if query or release_filter != "all" %}
+  <div class="result-summary">
+    Showing {{ total_games }} result{% if total_games != 1 %}s{% endif %}
+    {% if query %}
+      for “{{ query }}”
+    {% endif %}
+    {% if release_filter != "all" %}
+      with release filter: {{ release_filter }}
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if games %}
+  <section class="games-grid">
+    {% for game in games %}
+        <a
+          class="game-card-link"
+          href="{{ url_for('game_detail', slug=game.slug, page=page, q=query, search_type=search_type, release_filter=release_filter) }}"
+        >
+          <article class="game-card">
+              {% if game.card_image_url %}
+              <img class="game-card-image" src="{{ game.card_image_url }}" alt="{{ game.name }}">
+              {% else %}
+              <div class="game-card-placeholder">
+                <span>{{ game.name }}</span>
+              </div>
+              {% endif %}
+
+              <div class="game-card-body">
+              <h2>{{ game.name }}</h2>
+
+              <p class="game-meta">
+                {% if game.publisher %}
+                {{ game.publisher }}
+                {% elif game.developer %}
+                {{ game.developer }}
+                {% else %}
+                Publisher TBA
+                {% endif %}
+              </p>
+
+              <p class="game-release">
+                {% if game.release_date %}
+                Release date: {{ game.release_date }}
+                {% elif game.release_window %}
+                Release window: {{ game.release_window }}
+                {% else %}
+                Release date TBA
+                {% endif %}
+              </p>
+
+              {% if game.short_description %}
+                <p class="game-description">{{ game.short_description }}</p>
+              {% endif %}
+            </div>
+          </article>
+        </a>
+    {% endfor %}
+  </section>
+
+  <nav class="pagination">
+    {% if page > 1 %}
+      <a href="{{ url_for('games', page=page-1, q=query, search_type=search_type, release_filter=release_filter) }}">
+        ← Previous
+      </a>
+    {% else %}
+      <span class="disabled">← Previous</span>
+    {% endif %}
+
+    <span>Page {{ page }} of {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('games', page=page+1, q=query, search_type=search_type, release_filter=release_filter) }}">
+        Next →
+      </a>
+    {% else %}
+      <span class="disabled">Next →</span>
+    {% endif %}
+  </nav>
+{% else %}
+  <section class="empty-state">
+    <h2>No games found</h2>
+    <p>Please check your Supabase table or import data again.</p>
+  </section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.name }} | Game Release Tracker{% endblock %}
+
+{% block content %}
+<section class="detail-page">
+  {% if query %}
+    <a
+      class="back-link"
+      href="{{ url_for('games', page=page, q=query, search_type=search_type, release_filter=release_filter) }}"
+    > ← Back to search results </a>
+  {% else %}
+    <a
+      class="back-link"
+      href="{{ url_for('games', page=page) }}"
+    > ← Back to Gallery </a>
+  {% endif %}
+
+  <div class="detail-hero">
+    {% if game.hero_image_url %}
+      <img class="detail-hero-image" src="{{ game.hero_image_url }}" alt="{{ game.name }}">
+    {% elif game.card_image_url %}
+      <img class="detail-hero-image" src="{{ game.card_image_url }}" alt="{{ game.name }}">
+    {% else %}
+      <div class="detail-hero-placeholder">
+        <span>{{ game.name }}</span>
+      </div>
+    {% endif %}
+
+    <div class="detail-info">
+      <p class="eyebrow">Game Detail</p>
+      <h1>{{ game.name }}</h1>
+
+      {% if game.short_description %}
+        <p class="detail-summary">{{ game.short_description }}</p>
+      {% endif %}
+
+      <div class="detail-meta-grid">
+        <div>
+          <span>Publisher</span>
+          <strong>{{ game.publisher or "TBA" }}</strong>
+        </div>
+
+        <div>
+          <span>Developer</span>
+          <strong>{{ game.developer or "TBA" }}</strong>
+        </div>
+
+        <div>
+          <span>Release</span>
+          <strong>
+            {% if game.release_date %}
+              {{ game.release_date }}
+            {% elif game.release_window %}
+              {{ game.release_window }}
+            {% else %}
+              TBA
+            {% endif %}
+          </strong>
+        </div>
+
+        <div>
+          <span>Platforms</span>
+          <strong>{{ game.platforms or "TBA" }}</strong>
+        </div>
+
+        <div>
+          <span>Genres</span>
+          <strong>{{ game.genres or "TBA" }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="detail-section">
+    <h2>Overview</h2>
+    <p>
+      {% if game.description %}
+        {{ game.description }}
+      {% else %}
+        No detailed description is available yet.
+      {% endif %}
+    </p>
+  </section>
+
+  <section class="detail-actions">
+    {% if game.official_url %}
+      <a class="secondary-button" href="{{ game.official_url }}" target="_blank" rel="noopener noreferrer">
+        Official Page
+      </a>
+    {% endif %}
+
+    {% if game.trailer_url %}
+      <a class="secondary-button" href="{{ game.trailer_url }}" target="_blank" rel="noopener noreferrer">
+        Watch Trailer
+      </a>
+    {% endif %}
+
+    {% if game.source_url %}
+      <a class="secondary-button" href="{{ game.source_url }}" target="_blank" rel="noopener noreferrer">
+        Data Source
+      </a>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}
