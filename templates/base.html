@@ -1,3 +1,6 @@
+<!-- default page with no game data fetched from supabase, click button to load game gallery built in games.html -->
+<!-- user login/signup in this page. -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,8 +14,18 @@
     <a class="logo" href="{{ url_for('games') }}">Game Release Tracker</a>
 
     <nav class="nav-links">
-      <a href="{{ url_for('games') }}">Games</a>
-      <a href="#">Login</a>
+      <a class="nav-item" href="{{ url_for('games') }}">Games</a>
+
+      {% if current_user %}
+        <span class="nav-user">{{ current_user.email }}</span>
+
+        <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+          <button type="submit" class="nav-item nav-button">Logout</button>
+        </form>
+      {% else %}
+        <a class="nav-item" href="{{ url_for('login') }}">Login</a>
+        <a class="nav-item" href="{{ url_for('signup') }}">Sign up</a>
+      {% endif %}
     </nav>
   </header>
 

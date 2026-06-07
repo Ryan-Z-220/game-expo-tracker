@@ -1,3 +1,6 @@
+/* style sheet for project */
+
+/* general settings */
 * {
   box-sizing: border-box;
 }
@@ -13,6 +16,8 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* navigation bar section start */
 
 .site-header {
   display: flex;
@@ -33,6 +38,7 @@ a {
 
 .nav-links {
   display: flex;
+  align-items: center;
   gap: 18px;
   color: #c9c9d4;
 }
@@ -41,6 +47,38 @@ a {
   color: #ffffff;
 }
 
+.nav-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  color: #c9c9d4;
+  font: inherit;
+}
+
+.nav-item:hover {
+  color: #ffffff;
+}
+
+.nav-user {
+  color: #c9c9d4;
+  font-size: 0.9rem;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* navigation bar section end */
+
+/* base page content section start */
 .page-container {
   width: min(1200px, 90%);
   margin: 0 auto;
@@ -97,7 +135,9 @@ a {
   line-height: 1.6;
 }
 
-/* this is the search section */
+/* base page content section end */
+
+/* search section start */
 
 .search-form {
   margin-bottom: 30px;
@@ -168,6 +208,112 @@ a {
 
 /* search section end */
 
+/* login/signup section start */
+
+.auth-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(460px, 100%);
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 32px;
+}
+
+.auth-card h1 {
+  margin: 0 0 10px;
+  font-size: 2rem;
+}
+
+.auth-card p {
+  color: #c9c9d4;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.auth-form label {
+  color: #d9d9e2;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.auth-form input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #101116;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: rgba(142, 163, 255, 0.8);
+}
+
+.auth-form button,
+.logout-form button {
+  border: none;
+  background: #f5f5f5;
+  color: #101116;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.auth-switch {
+  margin-top: 18px;
+}
+
+.auth-switch a {
+  color: #8ea3ff;
+  font-weight: 700;
+}
+
+.flash-messages {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: rgba(142, 163, 255, 0.12);
+  border: 1px solid rgba(142, 163, 255, 0.35);
+  border-radius: 14px;
+}
+
+.flash-messages p {
+  margin: 0;
+  color: #ffffff;
+}
+
+.nav-user {
+  color: #c9c9d4;
+  font-size: 0.9rem;
+}
+
+.logout-form {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.logout-form button {
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+/* login/signup section end */
+
+/* game gallery section start */
 .games-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -286,6 +432,10 @@ a {
     min-height: auto;
   }
 }
+
+/* game gallery section end */
+
+/* game detail section start */
 
 .game-card-link {
   display: block;
@@ -437,3 +587,5 @@ a {
     min-height: 260px;
   }
 }
+
+/* game detail section end */
