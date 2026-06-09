@@ -1,4 +1,4 @@
-<!-- produce game detail due to the game name retreived from games.html. use base.html structure. -->
+<!-- produce game detail due to the game name retreived from games.html. use base.html structure. watchlist options added -->
 
 {% extends "base.html" %}
 
@@ -6,7 +6,9 @@
 
 {% block content %}
 <section class="detail-page">
-  {% if query %}
+  {% if from_page == "watchlist" %}
+    <a class="back-link" href="{{ url_for('watchlist') }}"> ← Back to Watchlist </a>
+  {% elif query or release_filter != "all" %}
     <a
       class="back-link"
       href="{{ url_for('games', page=page, q=query, search_type=search_type, release_filter=release_filter) }}"
@@ -86,6 +88,39 @@
   </section>
 
   <section class="detail-actions">
+    {% if current_user %}
+      <form
+        method="post"
+        class="watchlist-toggle-form"
+        data-game-id="{{ game.id }}"
+        data-add-url="{{ url_for('add_to_watchlist', game_id=game.id) }}"
+        data-remove-url="{{ url_for('remove_from_watchlist', game_id=game.id) }}"
+        data-in-watchlist="{{ 'true' if is_in_watchlist else 'false' }}"
+        action="{{ url_for('remove_from_watchlist', game_id=game.id) if is_in_watchlist else url_for('add_to_watchlist', game_id=game.id) }}"
+      >
+        <input
+          type="hidden"
+          name="next_url"
+          value="{{ url_for('game_detail', slug=game.slug, page=page, q=query, search_type=search_type, release_filter=release_filter, from_page=from_page) }}"
+        >
+
+        <button
+          class="secondary-button {% if is_in_watchlist %}danger-button{% endif %}"
+          type="submit"
+        >
+          {% if is_in_watchlist %}
+            Remove from Watchlist
+          {% else %}
+            Add to Watchlist
+          {% endif %}
+        </button>
+      </form>
+    {% else %}
+      <a class="secondary-button" href="{{ url_for('login') }}">
+        Log in to add to Watchlist
+      </a>
+    {% endif %}
+
     {% if game.official_url %}
       <a class="secondary-button" href="{{ game.official_url }}" target="_blank" rel="noopener noreferrer">
         Official Page

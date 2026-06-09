@@ -29,6 +29,25 @@ def inject_user():
         "current_user": session.get("user")
     }
 
+def get_supabase_for_current_user():
+    user_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+    access_token = session.get("access_token")
+    refresh_token = session.get("refresh_token")
+
+    if access_token and refresh_token:
+        user_client.auth.set_session(access_token, refresh_token)
+
+    return user_client
+
+def get_current_user_id():
+    user = session.get("user")
+
+    if not user:
+        return None
+
+    return user.get("id")
+
 # request for base page
 @app.route("/")
 def home():
@@ -119,7 +138,7 @@ def games():
         release_filter=release_filter,
     )
 
-# requeste for game detail section by game name
+# requeste for game detail section by game name (include watchlist options)
 @app.route("/games/<slug>")
 def game_detail(slug):
     response = (
@@ -139,6 +158,25 @@ def game_detail(slug):
     query = request.args.get("q", "").strip()
     search_type = request.args.get("search_type", "name")
     release_filter = request.args.get("release_filter", "all")
+    from_page = request.args.get("from_page", "gallery")
+
+    is_in_watchlist = False
+    user_id = get_current_user_id()
+
+    if user_id:
+        user_supabase = get_supabase_for_current_user()
+
+        watchlist_response = (
+            user_supabase.table("watchlist")
+            .select("id")
+            .eq("user_id", user_id)
+            .eq("game_id", game["id"])
+            .limit(1)
+            .execute()
+        )
+
+        watchlist_rows = watchlist_response.data or []
+        is_in_watchlist = len(watchlist_rows) > 0
 
     return render_template(
         "game_detail.html",
@@ -147,6 +185,8 @@ def game_detail(slug):
         query=query,
         search_type=search_type,
         release_filter=release_filter,
+        is_in_watchlist=is_in_watchlist,
+        from_page=from_page,
     )
 
 # request for user signup section
@@ -241,6 +281,144 @@ def logout():
     flash("You have been logged out.")
     return redirect(url_for("games"))
 
+# request for add a game into watchlist (login required)
+@app.route("/watchlist/add/<game_id>", methods=["POST"])
+def add_to_watchlist(game_id):
+    next_url = request.form.get("next_url") or url_for("games")
+    user_id = get_current_user_id()
+
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+
+    if not user_id:
+        if wants_json:
+            return {"success": False, "message": "Please log in first."}, 401
+
+        flash("Please log in to add games to your watchlist.")
+        return redirect(url_for("login"))
+
+    user_supabase = get_supabase_for_current_user()
+
+    try:
+        user_supabase.table("watchlist").insert(
+            {
+                "user_id": user_id,
+                "game_id": game_id,
+            }
+        ).execute()
+
+        if wants_json:
+            return {
+                "success": True,
+                "in_watchlist": True,
+                "message": "Game added to your watchlist.",
+            }
+
+        flash("Game added to your watchlist.")
+
+    except Exception as error:
+        error_text = str(error)
+
+        if "duplicate" in error_text.lower() or "unique" in error_text.lower():
+            if wants_json:
+                return {
+                    "success": True,
+                    "in_watchlist": True,
+                    "message": "This game is already in your watchlist.",
+                }
+
+            flash("This game is already in your watchlist.")
+        else:
+            if wants_json:
+                return {
+                    "success": False,
+                    "message": f"Could not add game to watchlist: {error}",
+                }, 400
+
+            flash(f"Could not add game to watchlist: {error}")
+
+    return redirect(next_url)
+
+# request for remove a game from watchlist (login required)
+@app.route("/watchlist/remove/<game_id>", methods=["POST"])
+def remove_from_watchlist(game_id):
+    next_url = request.form.get("next_url") or url_for("games")
+    user_id = get_current_user_id()
+
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+
+    if not user_id:
+        if wants_json:
+            return {"success": False, "message": "Please log in first."}, 401
+
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+
+    user_supabase = get_supabase_for_current_user()
+
+    try:
+        (
+            user_supabase.table("watchlist")
+            .delete()
+            .eq("user_id", user_id)
+            .eq("game_id", game_id)
+            .execute()
+        )
+
+        if wants_json:
+            return {
+                "success": True,
+                "in_watchlist": False,
+                "message": "Game removed from your watchlist.",
+            }
+
+        flash("Game removed from your watchlist.")
+
+    except Exception as error:
+        if wants_json:
+            return {
+                "success": False,
+                "message": f"Could not remove game from watchlist: {error}",
+            }, 400
+
+        flash(f"Could not remove game from watchlist: {error}")
+
+    return redirect(next_url)
+
+# request to show user's watchlist
+@app.route("/watchlist")
+def watchlist():
+    user_id = get_current_user_id()
+
+    if not user_id:
+        flash("Please log in to view your watchlist.")
+        return redirect(url_for("login"))
+
+    user_supabase = get_supabase_for_current_user()
+
+    response = (
+        user_supabase.table("watchlist")
+        .select(
+            "created_at, games(id, slug, name, card_image_url, publisher, developer, "
+            "release_date, release_window, platforms, genres, short_description, display_order)"
+        )
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    watchlist_items = response.data or []
+
+    games_data = [
+        item["games"]
+        for item in watchlist_items
+        if item.get("games")
+    ]
+
+    return render_template(
+        "watchlist.html",
+        games=games_data,
+        total_games=len(games_data),
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}My Watchlist | Game Release Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">My Games</p>
+  <h1>My Watchlist</h1>
+  <p>
+    You have saved {{ total_games }} game{% if total_games != 1 %}s{% endif %}.
+  </p>
+</section>
+
+{% if games %}
+  <section class="games-grid">
+    {% for game in games %}
+        <a
+            class="game-card-link"
+            href="{{ url_for('game_detail', slug=game.slug, from_page='watchlist') }}"
+        >
+            <article class="game-card">
+                {% if game.card_image_url %}
+                    <img class="game-card-image" src="{{ game.card_image_url }}" alt="{{ game.name }}">
+                {% else %}
+                    <div class="game-card-placeholder">
+                    <span>{{ game.name }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="game-card-body">
+                    <h2>{{ game.name }}</h2>
+
+                    <p class="game-meta">
+                    {% if game.publisher %}
+                        {{ game.publisher }}
+                    {% elif game.developer %}
+                        {{ game.developer }}
+                    {% else %}
+                        Publisher TBA
+                    {% endif %}
+                    </p>
+
+                    <p class="game-release">
+                    {% if game.release_date %}
+                        Release date: {{ game.release_date }}
+                    {% elif game.release_window %}
+                        Release window: {{ game.release_window }}
+                    {% else %}
+                        Release date TBA
+                    {% endif %}
+                    </p>
+
+                    {% if game.short_description %}
+                    <p class="game-description">{{ game.short_description }}</p>
+                    {% endif %}
+                </div>
+            </article>
+        </a>
+    {% endfor %}
+  </section>
+{% else %}
+  <section class="empty-state">
+    <h2>Your watchlist is empty</h2>
+    <p>Browse the game gallery and add games you are interested in.</p>
+    <a class="primary-button" href="{{ url_for('games') }}">Browse Games</a>
+  </section>
+{% endif %}
+{% endblock %}
