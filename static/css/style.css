@@ -76,6 +76,97 @@ a {
   cursor: pointer;
 }
 
+.account-menu {
+  position: relative;
+}
+
+.account-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.account-avatar,
+.profile-avatar-large {
+  display: grid;
+  place-items: center;
+  background: #f5f5f5;
+  color: #101116;
+  font-weight: 800;
+}
+
+.account-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.account-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 48px;
+  min-width: 220px;
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 10px;
+  z-index: 30;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.account-menu.open .account-dropdown {
+  display: grid;
+  gap: 4px;
+}
+
+.account-dropdown a,
+.account-dropdown button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #d9d9e2;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.account-dropdown a:hover,
+.account-dropdown button:hover {
+  background: rgba(142, 163, 255, 0.12);
+  color: #ffffff;
+}
+
+.account-dropdown form {
+  margin: 0;
+}
+
+.account-summary {
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.account-summary strong {
+  display: block;
+  color: #ffffff;
+}
+
+.account-summary span {
+  display: block;
+  margin-top: 4px;
+  color: #aeb0bd;
+  font-size: 0.75rem;
+}
+
+.account-email {
+  color: #7f8496;
+  word-break: break-all;
+}
+
 /* navigation bar section end */
 
 /* base page content section start */
@@ -668,6 +759,16 @@ a {
   padding: 18px;
 }
 
+.comment-author {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.comment-username {
+  color: #aeb0bd;
+  font-weight: 600;
+}
+
 .comment-meta {
   display: flex;
   justify-content: space-between;
@@ -722,3 +823,83 @@ a {
 }
 
 /* game detail section end */
+
+/* profile section start */
+
+.profile-page {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 30px;
+}
+
+.profile-avatar-large {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  font-size: 2.2rem;
+  flex: 0 0 auto;
+}
+
+.profile-card h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+}
+
+.profile-username,
+.profile-role {
+  color: #c9c9d4;
+  margin: 6px 0;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.profile-stats div {
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.profile-stats span {
+  color: #aeb0bd;
+}
+
+.profile-stats strong {
+  display: block;
+  margin-top: 8px;
+  color: #ffffff;
+  font-size: 2rem;
+}
+
+.form-hint {
+  color: #8d91a3;
+  font-size: 0.85rem;
+  margin: -4px 0 6px;
+}
+
+@media (max-width: 640px) {
+  .profile-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* profile section end */

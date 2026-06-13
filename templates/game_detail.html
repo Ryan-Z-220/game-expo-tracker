@@ -192,7 +192,12 @@
         {% for comment in comments %}
           <article class="comment-card">
             <div class="comment-meta">
-              <strong>{{ comment.user_email or "User" }}</strong>
+              <span class="comment-author">
+                {{ comment.author_name or comment.author_username or "User" }}
+                {% if comment.author_username %}
+                  <span class="comment-username">(@{{ comment.author_username }})</span>
+                {% endif %}
+              </span>
               <span>{{ comment.created_at|format_datetime }}</span>
             </div>
 

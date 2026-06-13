@@ -1,0 +1,33 @@
+<!-- profile section to show user info. -->
+
+{% extends "base.html" %}
+
+{% block title %}Profile | Game Release Tracker{% endblock %}
+
+{% block content %}
+<section class="profile-page">
+  <div class="profile-card">
+    <div class="profile-avatar-large">
+      {{ (profile.display_name or profile.username or "?")[0]|upper }}
+    </div>
+
+    <div>
+      <p class="eyebrow">Profile</p>
+      <h1>{{ profile.display_name or profile.username }}</h1>
+      <p class="profile-username">@{{ profile.username }}</p>
+      <p class="profile-role">Role: {{ profile.role }}</p>
+    </div>
+  </div>
+
+  <section class="profile-stats">
+    <div>
+      <span>Watchlist</span>
+      <strong>{{ watchlist_count }}</strong>
+    </div>
+    <div>
+      <span>Comments</span>
+      <strong>{{ comment_count }}</strong>
+    </div>
+  </section>
+</section>
+{% endblock %}

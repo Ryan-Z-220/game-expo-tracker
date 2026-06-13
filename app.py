@@ -1,7 +1,8 @@
-# manage requests in project
+# manage requests in project 
 
 import math
 import os
+import re
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -17,6 +18,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError(
@@ -25,10 +27,24 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 # supabase create client request
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+admin_supabase: Client | None = None
+if SUPABASE_SERVICE_ROLE_KEY:
+    admin_supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+USERNAME_PATTERN = re.compile(r"^[a-z0-9_]{3,24}$")
+
+def normalize_username(value):
+    return value.strip().lower()
+
+def is_valid_username(username):
+    return bool(USERNAME_PATTERN.fullmatch(username))
+
+
 @app.context_processor
 def inject_user():
     return {
-        "current_user": session.get("user")
+        "current_user": session.get("user"),
+        "current_profile": session.get("profile"),
     }
 
 def get_supabase_for_current_user():
@@ -203,6 +219,37 @@ def game_detail(slug):
 
     comments = comments_response.data or []
 
+    comment_user_ids = list({
+        comment["user_id"]
+        for comment in comments
+        if comment.get("user_id")
+    })
+
+    profiles_by_id = {}
+
+    if comment_user_ids:
+        profiles_response = (
+            supabase.table("profiles")
+            .select("id, username, display_name")
+            .in_("id", comment_user_ids)
+            .execute()
+        )
+
+        profiles_by_id = {
+            profile["id"]: profile
+            for profile in (profiles_response.data or [])
+        }
+
+    for comment in comments:
+        profile = profiles_by_id.get(comment.get("user_id"))
+
+        if profile:
+            comment["author_name"] = profile.get("display_name") or profile.get("username")
+            comment["author_username"] = profile.get("username")
+        else:
+            comment["author_name"] = comment.get("user_email") or "User"
+            comment["author_username"] = None
+
     return render_template(
         "game_detail.html",
         game=game,
@@ -220,12 +267,18 @@ def game_detail(slug):
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        username = normalize_username(request.form.get("username", ""))
+        display_name = request.form.get("display_name", "").strip()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
-        if not email or not password or not confirm_password:
-            flash("Please fill in all fields.")
+        if not username or not email or not password or not confirm_password:
+            flash("Please fill in all required fields.")
+            return render_template("signup.html")
+
+        if not is_valid_username(username):
+            flash("Username must be 3–24 characters and use only lowercase letters, numbers, and underscores.")
             return render_template("signup.html")
 
         if password != confirm_password:
@@ -236,19 +289,56 @@ def signup():
             flash("Password must be at least 6 characters.")
             return render_template("signup.html")
 
+        if not admin_supabase:
+            flash("Signup is temporarily unavailable because server profile setup is missing.")
+            return render_template("signup.html")
+
         try:
-            response = supabase.auth.sign_up(
+            existing_profile = (
+                supabase.table("profiles")
+                .select("id")
+                .eq("username", username)
+                .limit(1)
+                .execute()
+            )
+
+            if existing_profile.data:
+                flash("This username is already taken. Please choose another one.")
+                return render_template("signup.html")
+
+            auth_response = supabase.auth.sign_up(
                 {
                     "email": email,
                     "password": password,
                 }
             )
 
+            user = auth_response.user
+
+            if not user:
+                flash("Could not create account. Please try again.")
+                return render_template("signup.html")
+
+            admin_supabase.table("profiles").insert(
+                {
+                    "id": user.id,
+                    "username": username,
+                    "display_name": display_name or username,
+                    "role": "user",
+                }
+            ).execute()
+
             flash("Account created. Please check your email to confirm your account, then log in.")
             return redirect(url_for("login"))
 
         except Exception as error:
-            flash(f"Signup failed: {error}")
+            error_text = str(error)
+
+            if "duplicate" in error_text.lower() or "unique" in error_text.lower():
+                flash("This username is already taken. Please choose another one.")
+            else:
+                flash(f"Signup failed: {error}")
+
             return render_template("signup.html")
 
     return render_template("signup.html")
@@ -283,6 +373,25 @@ def login():
                 "id": user.id,
                 "email": user.email,
             }
+
+            profile_response = (
+                supabase.table("profiles")
+                .select("id, username, display_name, avatar_url, role")
+                .eq("id", user.id)
+                .limit(1)
+                .execute()
+            )
+
+            profiles = profile_response.data or []
+            profile = profiles[0] if profiles else None
+
+            session["profile"] = profile or {
+                "id": user.id,
+                "username": user.email.split("@")[0],
+                "display_name": user.email.split("@")[0],
+                "avatar_url": None,
+                "role": "user",
+            }            
 
             session["access_token"] = session_data.access_token
             session["refresh_token"] = session_data.refresh_token
@@ -516,6 +625,49 @@ def delete_comment(comment_id):
         flash(f"Could not delete comment: {error}")
 
     return redirect(next_url)
+
+# request for profile section
+@app.route("/profile")
+def profile():
+    user_id = get_current_user_id()
+
+    if not user_id:
+        flash("Please log in to view your profile.")
+        return redirect(url_for("login"))
+
+    user_supabase = get_supabase_for_current_user()
+
+    profile_response = (
+        user_supabase.table("profiles")
+        .select("id, username, display_name, avatar_url, role, created_at")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+
+    profiles = profile_response.data or []
+    profile_data = profiles[0] if profiles else session.get("profile")
+
+    watchlist_response = (
+        user_supabase.table("watchlist")
+        .select("id", count="exact")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    comments_response = (
+        user_supabase.table("comments")
+        .select("id", count="exact")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    return render_template(
+        "profile.html",
+        profile=profile_data,
+        watchlist_count=watchlist_response.count or 0,
+        comment_count=comments_response.count or 0,
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
