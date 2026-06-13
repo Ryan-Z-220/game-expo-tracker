@@ -591,6 +591,121 @@ a {
   background: rgba(255, 130, 130, 0.12);
 }
 
+.comments-section {
+  margin-top: 34px;
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 30px;
+}
+
+.comments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.comments-header h2 {
+  margin: 0;
+}
+
+.comments-header span {
+  color: #aeb0bd;
+  font-size: 0.95rem;
+}
+
+.comment-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.comment-form label {
+  font-weight: 700;
+  color: #d9d9e2;
+}
+
+.comment-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 110px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #101116;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 0.96rem;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.comment-form textarea:focus {
+  outline: none;
+  border-color: rgba(142, 163, 255, 0.8);
+}
+
+.login-comment-prompt,
+.empty-comments {
+  background: #101116;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 18px;
+  color: #c9c9d4;
+  margin-bottom: 20px;
+}
+
+.comments-list {
+  display: grid;
+  gap: 14px;
+}
+
+.comment-card {
+  background: #101116;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.comment-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  color: #aeb0bd;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.comment-meta strong {
+  color: #ffffff;
+}
+
+.comment-card p {
+  color: #d9d9e2;
+  line-height: 1.6;
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+
+.delete-comment-form {
+  margin: 0;
+}
+
+.delete-comment-form button {
+  border: none;
+  background: transparent;
+  color: #ffb4b4;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+}
+
+.delete-comment-form button:hover {
+  color: #ffd1d1;
+}
+
 @media (max-width: 780px) {
   .detail-hero {
     grid-template-columns: 1fr;

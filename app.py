@@ -3,6 +3,8 @@
 import math
 import os
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, abort, redirect, url_for, flash, session
 from supabase import create_client, Client
@@ -47,6 +49,19 @@ def get_current_user_id():
         return None
 
     return user.get("id")
+
+# time format
+@app.template_filter("format_datetime")
+def format_datetime(value):
+    if not value:
+        return ""
+
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        nz_time = dt.astimezone(ZoneInfo("Pacific/Auckland"))
+        return nz_time.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(value)[:16].replace("T", " ")
 
 # request for base page
 @app.route("/")
@@ -178,6 +193,16 @@ def game_detail(slug):
         watchlist_rows = watchlist_response.data or []
         is_in_watchlist = len(watchlist_rows) > 0
 
+    comments_response = (
+        supabase.table("comments")
+        .select("id, user_id, user_email, content, created_at")
+        .eq("game_id", game["id"])
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    comments = comments_response.data or []
+
     return render_template(
         "game_detail.html",
         game=game,
@@ -187,6 +212,8 @@ def game_detail(slug):
         release_filter=release_filter,
         is_in_watchlist=is_in_watchlist,
         from_page=from_page,
+        comments=comments,
+        current_user_id=user_id,
     )
 
 # request for user signup section
@@ -419,6 +446,76 @@ def watchlist():
         games=games_data,
         total_games=len(games_data),
     )
+
+# request to add a comment
+@app.route("/comments/add/<game_id>", methods=["POST"])
+def add_comment(game_id):
+    user_id = get_current_user_id()
+
+    if not user_id:
+        flash("Please log in to write a comment.")
+        return redirect(url_for("login"))
+
+    content = request.form.get("content", "").strip()
+    next_url = request.form.get("next_url") or url_for("games")
+
+    if not content:
+        flash("Comment cannot be empty.")
+        return redirect(next_url)
+
+    if len(content) > 1000:
+        flash("Comment is too long. Please keep it under 1000 characters.")
+        return redirect(next_url)
+
+    user = session.get("user") or {}
+    user_email = user.get("email")
+
+    user_supabase = get_supabase_for_current_user()
+
+    try:
+        user_supabase.table("comments").insert(
+            {
+                "user_id": user_id,
+                "game_id": game_id,
+                "user_email": user_email,
+                "content": content,
+            }
+        ).execute()
+
+        flash("Comment posted.")
+
+    except Exception as error:
+        flash(f"Could not post comment: {error}")
+
+    return redirect(next_url)
+
+# request to delete a comment
+@app.route("/comments/delete/<comment_id>", methods=["POST"])
+def delete_comment(comment_id):
+    user_id = get_current_user_id()
+    next_url = request.form.get("next_url") or url_for("games")
+
+    if not user_id:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+
+    user_supabase = get_supabase_for_current_user()
+
+    try:
+        (
+            user_supabase.table("comments")
+            .delete()
+            .eq("id", comment_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        flash("Comment deleted.")
+
+    except Exception as error:
+        flash(f"Could not delete comment: {error}")
+
+    return redirect(next_url)
 
 if __name__ == "__main__":
     app.run(debug=True)
