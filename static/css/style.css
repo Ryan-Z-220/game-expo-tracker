@@ -761,12 +761,12 @@ a {
 
 .comment-author {
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .comment-username {
   color: #aeb0bd;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .comment-meta {
@@ -903,3 +903,52 @@ a {
 }
 
 /* profile section end */
+
+/* profile editting section start */
+
+.profile-edit-panel {
+  margin-top: 22px;
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px;
+}
+
+.profile-edit-form {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-edit-form label {
+  font-weight: 700;
+  color: #d9d9e2;
+}
+
+.profile-edit-form input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #101116;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.profile-edit-form input:focus {
+  outline: none;
+  border-color: rgba(142, 163, 255, 0.8);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-edit-link {
+  margin-top: 14px;
+  display: inline-flex;
+}
+
+/* profile editting section end */

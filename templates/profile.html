@@ -16,6 +16,9 @@
       <h1>{{ profile.display_name or profile.username }}</h1>
       <p class="profile-username">@{{ profile.username }}</p>
       <p class="profile-role">Role: {{ profile.role }}</p>
+      <a class="secondary-button profile-edit-link" href="{{ url_for('edit_profile') }}">
+        Edit profile
+      </a>
     </div>
   </div>
 

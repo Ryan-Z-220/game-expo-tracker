@@ -1,0 +1,44 @@
+<!-- section to edit user's profile. -->
+
+{% extends "base.html" %}
+
+{% block title %}Edit Profile | Game Release Tracker{% endblock %}
+
+{% block content %}
+<section class="profile-page">
+  <div class="profile-card">
+    <div class="profile-avatar-large">
+      {{ (profile.display_name or profile.username or "?")[0]|upper }}
+    </div>
+
+    <div>
+      <p class="eyebrow">Edit Profile</p>
+      <h1>{{ profile.display_name or profile.username }}</h1>
+      <p class="profile-username">@{{ profile.username }}</p>
+    </div>
+  </div>
+
+  <section class="profile-edit-panel">
+    <form method="post" class="profile-edit-form">
+      <label for="display_name">Display name</label>
+      <input
+        id="display_name"
+        type="text"
+        name="display_name"
+        maxlength="40"
+        value="{{ profile.display_name or '' }}"
+        placeholder="Optional display name"
+      >
+
+      <p class="form-hint">
+        Your username is fixed for now: @{{ profile.username }}
+      </p>
+
+      <div class="form-actions">
+        <button class="secondary-button" type="submit">Save changes</button>
+        <a class="secondary-button" href="{{ url_for('profile') }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</section>
+{% endblock %}

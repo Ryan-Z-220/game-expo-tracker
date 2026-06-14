@@ -15,35 +15,23 @@
         <div class="flash-messages">
           {% for message in messages %}
             <p>{{ message }}</p>
-          {% endfor %}
+          {% endfor %}s
         </div>
       {% endif %}
     {% endwith %}
 
     <form method="post" class="auth-form">
-      <label for="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          name="username"
-          required
-          minlength="3"
-          maxlength="24"
-          pattern="[a-z0-9_]+"
-          placeholder="e.g. ryan_z"
-        >
-        <p class="form-hint">
-          3–24 characters. Lowercase letters, numbers, and underscores only.
-        </p>
-
-        <label for="display_name">Display name</label>
-        <input
-          id="display_name"
-          type="text"
-          name="display_name"
-          maxlength="40"
-          placeholder="Optional, e.g. Ryan or 月狐"
-        >
+      <label for="display_name">Display name</label>
+      <input
+        id="display_name"
+        type="text"
+        name="display_name"
+        maxlength="40"
+        placeholder="Optional, e.g. Ryan or 月狐"
+      >
+      <p class="form-hint">
+        This name is shown publicly and can be changed later.
+      </p>
       <label for="email">Email address</label>
       <input id="email" type="email" name="email" required>
 

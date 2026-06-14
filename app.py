@@ -2,7 +2,7 @@
 
 import math
 import os
-import re
+import secrets
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -31,13 +31,8 @@ admin_supabase: Client | None = None
 if SUPABASE_SERVICE_ROLE_KEY:
     admin_supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-USERNAME_PATTERN = re.compile(r"^[a-z0-9_]{3,24}$")
-
-def normalize_username(value):
-    return value.strip().lower()
-
-def is_valid_username(username):
-    return bool(USERNAME_PATTERN.fullmatch(username))
+def generate_public_username():
+    return f"user_{secrets.token_hex(4)}"
 
 
 @app.context_processor
@@ -65,6 +60,23 @@ def get_current_user_id():
         return None
 
     return user.get("id")
+
+def create_unique_public_username():
+    for _ in range(5):
+        username = generate_public_username()
+
+        existing = (
+            supabase.table("profiles")
+            .select("id")
+            .eq("username", username)
+            .limit(1)
+            .execute()
+        )
+
+        if not existing.data:
+            return username
+
+    raise RuntimeError("Could not generate a unique username.")
 
 # time format
 @app.template_filter("format_datetime")
@@ -267,7 +279,7 @@ def game_detail(slug):
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        username = normalize_username(request.form.get("username", ""))
+        username = create_unique_public_username()
         display_name = request.form.get("display_name", "").strip()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
@@ -275,10 +287,6 @@ def signup():
 
         if not username or not email or not password or not confirm_password:
             flash("Please fill in all required fields.")
-            return render_template("signup.html")
-
-        if not is_valid_username(username):
-            flash("Username must be 3–24 characters and use only lowercase letters, numbers, and underscores.")
             return render_template("signup.html")
 
         if password != confirm_password:
@@ -323,7 +331,7 @@ def signup():
                 {
                     "id": user.id,
                     "username": username,
-                    "display_name": display_name or username,
+                    "display_name": display_name or "New User",
                     "role": "user",
                 }
             ).execute()
@@ -668,6 +676,70 @@ def profile():
         watchlist_count=watchlist_response.count or 0,
         comment_count=comments_response.count or 0,
     )
+
+# request to edit profile
+@app.route("/profile/edit", methods=["GET", "POST"])
+def edit_profile():
+    user_id = get_current_user_id()
+
+    if not user_id:
+        flash("Please log in to edit your profile.")
+        return redirect(url_for("login"))
+
+    user_supabase = get_supabase_for_current_user()
+
+    if request.method == "POST":
+        display_name = request.form.get("display_name", "").strip()
+
+        if len(display_name) > 40:
+            flash("Display name must be 40 characters or less.")
+            return redirect(url_for("edit_profile"))
+
+        try:
+            response = (
+                user_supabase.table("profiles")
+                .update({"display_name": display_name or None})
+                .eq("id", user_id)
+                .execute()
+            )
+
+            updated_profiles = response.data or []
+
+            if updated_profiles:
+                updated_profile = updated_profiles[0]
+            else:
+                profile_response = (
+                    user_supabase.table("profiles")
+                    .select("id, username, display_name, avatar_url, role")
+                    .eq("id", user_id)
+                    .limit(1)
+                    .execute()
+                )
+                profiles = profile_response.data or []
+                updated_profile = profiles[0] if profiles else None
+
+            if updated_profile:
+                session["profile"] = updated_profile
+
+            flash("Profile updated.")
+            return redirect(url_for("profile"))
+
+        except Exception as error:
+            flash(f"Could not update profile: {error}")
+            return redirect(url_for("edit_profile"))
+
+    profile_response = (
+        user_supabase.table("profiles")
+        .select("id, username, display_name, avatar_url, role")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+
+    profiles = profile_response.data or []
+    profile_data = profiles[0] if profiles else session.get("profile")
+
+    return render_template("edit_profile.html", profile=profile_data)
 
 if __name__ == "__main__":
     app.run(debug=True)

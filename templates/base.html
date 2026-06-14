@@ -38,13 +38,14 @@
             </div>
 
             <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('edit_profile') }}">Edit profile</a>
             <a href="{{ url_for('watchlist') }}">Watchlist</a>
 
             <form method="post" action="{{ url_for('logout') }}">
               <button type="submit">Logout</button>
             </form>
           {% else %}
-            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('login') }}">Log in</a>
             <a href="{{ url_for('signup') }}">Sign up</a>
           {% endif %}
         </div>
